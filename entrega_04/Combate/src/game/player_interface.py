@@ -3,13 +3,19 @@ from tkinter import messagebox
 from tkinter import simpledialog
 from dog.dog_player_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
+from game.tabuleiro import Tabuleiro
+from game.player import Player
 
 
 class PlayerInterface(DogPlayerInterface):
-    def __init__(self):
+    def __init__(self, tabuleiro: Tabuleiro):
         self.main_window = Tk()  # instanciar Tk (que implementa a janela)
+        self.turnMessage = StringVar(None)
+        self.turnMessage.set("Partida não iniciada.")
         self.fill_main_window()  # preenchimento da janela
+        self.tabuleiro = tabuleiro
         self.player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
+        self.tabuleiro.setLocalPlayer(Player(identifier=self.player_name))
         self.dog_server_interface = DogActor()
         message = self.dog_server_interface.initialize(self.player_name, self)
         messagebox.showinfo(message=message)
@@ -46,22 +52,26 @@ class PlayerInterface(DogPlayerInterface):
         #self.logo_label = Label(self.message_frame, bd = 0, image=self.logo)
         #self.logo_label.grid(row=0, column=0)
         #self.menubar.option_add('*tearOff', FALSE),
-        self.message_label = Label(self.message_frame, bg="dark olive green", text=' COMBATE', font="arial 30")
+        self.message_label = Label(self.message_frame, bg="dark olive green", text='COMBATE', font="arial 30")
+        self.turnMessageLabel = Label(self.message_frame, bg="dark olive green", textvariable=self.turnMessage, font="arial 20")
         self.message_label.grid(row=0, column=1)
+        self.turnMessageLabel.grid(row=1, column=1)
         self.menubar = Menu(self.main_window)
         self.menubar.option_add('*tearOff', FALSE)
         self.main_window['menu'] = self.menubar
         self.menu_file = Menu(self.menubar)
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menu_file.add_command(label='Iniciar jogo', command = self.start_match)
-        self.menu_file.add_command(label='restaurar estado inicial', command = self.start_game)
+        self.menu_file.add_command(label='restaurar estado inicial', command = self.reset_game)
 
     def start_match(self):
         start_status = self.dog_server_interface.start_match(2)
         message = start_status.get_message()
         messagebox.showinfo(message=message)
+        if (len(start_status.players) > 1):
+            self.turnMessage.set("Não é seu turno." if self.tabuleiro.local_player.isPlayerTurn() else "É o seu turno.")
     
-    def start_game(self):
+    def reset_game(self):
         print('start_game')
     
     def receive_start(self, start_status):
@@ -69,5 +79,5 @@ class PlayerInterface(DogPlayerInterface):
         messagebox.showinfo(message=message)
 
     def click(self, event, line, column):
-        print(self.player_name)
+        print(self.tabuleiro.local_player.identifier)
         print('CLICK', line, column)

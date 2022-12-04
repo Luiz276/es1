@@ -1,5 +1,5 @@
-from position import Position
-from player import Player
+from game.position import *
+from game.player import Player
 
 
 class Peca:

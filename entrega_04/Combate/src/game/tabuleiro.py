@@ -1,5 +1,5 @@
-from position import Position
-from player import Player
+from game.position import Position
+from game.player import Player
 
 '''
 # Tabuleiro match_status
@@ -13,8 +13,15 @@ from player import Player
 
 
 class Tabuleiro:
+
     def __init__(self):
         self.positions: Position[10][10]
         self.local_player: Player
         self.remote_player: Player
         self.match_status = 1
+
+    def setLocalPlayer(self, player: Player):
+        self.local_player = player
+
+    def setWinner(self):
+        pass
