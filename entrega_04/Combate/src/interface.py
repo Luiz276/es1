@@ -1,18 +1,19 @@
 from tkinter import *
 from tkinter import messagebox
 from tkinter import simpledialog
-from dog.dog_interface import DogPlayerInterface
+from dog.dog_player_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
+
 
 class PlayerInterface(DogPlayerInterface):
     def __init__(self):
-        self.main_window = Tk() # instanciar Tk (que implementa a janela)
-        self.fill_main_window() # preenchimento da janela
-        player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
+        self.main_window = Tk()  # instanciar Tk (que implementa a janela)
+        self.fill_main_window()  # preenchimento da janela
+        self.player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
         self.dog_server_interface = DogActor()
-        message = self.dog_server_interface.initialize(player_name, self)
+        message = self.dog_server_interface.initialize(self.player_name, self)
         messagebox.showinfo(message=message)
-        self.main_window.mainloop() # abrir a janela
+        self.main_window.mainloop()  # abrir a janela
         #root.option_add('*tearOff', FALSE)
     
     def fill_main_window(self):
@@ -33,10 +34,10 @@ class PlayerInterface(DogPlayerInterface):
         # Preenchimento de table_frame com 21 imagens iguais, organizadas em 3 linhas e 7 colunas
         self.board_view=[]
         for y in range(10):
-            a_column = [] # column
+            a_column = []  # column
             for x in range(10):
                 aLabel = Label(self.table_frame, bd = 0, image=self.an_image)
-                aLabel.grid(row=x , column=y)
+                aLabel.grid(row=x, column=y)
                 aLabel.bind("<Button-1>", lambda event, a_line=x, a_column=y: self.click(event, a_line, a_column))
                 a_column.append(aLabel)
             self.board_view.append(a_column)
@@ -68,4 +69,5 @@ class PlayerInterface(DogPlayerInterface):
         messagebox.showinfo(message=message)
 
     def click(self, event, line, column):
+        print(self.player_name)
         print('CLICK', line, column)

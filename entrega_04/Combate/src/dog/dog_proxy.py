@@ -41,7 +41,7 @@ class DogProxy:
             resp1 = resp_dict["0"]
             resp2 = resp_dict["1"]
             self.status = 2
-            message = "Conectado a Dog Server"
+            message = a_name + " conectado a Dog Server"
         else:
             self.status = 1
             message = "Você está sem conexão"
