@@ -1,4 +1,4 @@
-from game.player import *
+from game.player import Player
 from game.peca import Peca
 
 

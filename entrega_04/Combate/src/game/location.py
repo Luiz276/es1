@@ -1,10 +1,10 @@
 class Location:
-    def __init__(self):
-        self.line = 0
-        self.column = 0
+    def __init__(self, line: int, column: int):
+        self._line = line
+        self._column = column
 
     def getLine(self):
-        pass
+        return self._line
 
     def getColumn(self):
-        pass
+        return self._column

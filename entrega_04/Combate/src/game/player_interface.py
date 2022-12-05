@@ -5,6 +5,7 @@ from dog.dog_player_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 from game.tabuleiro import Tabuleiro
 from game.player import Player
+from game.location import Location
 
 
 class PlayerInterface(DogPlayerInterface):
@@ -62,14 +63,16 @@ class PlayerInterface(DogPlayerInterface):
         self.menu_file = Menu(self.menubar)
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menu_file.add_command(label='Iniciar jogo', command = self.start_match)
-        self.menu_file.add_command(label='restaurar estado inicial', command = self.reset_game)
+        self.menu_file.add_command(label='Restaurar estado inicial', command = self.reset_game)
 
     def start_match(self):
         start_status = self.dog_server_interface.start_match(2)
         message = start_status.get_message()
         messagebox.showinfo(message=message)
         if (len(start_status.players) > 1):
-            self.turnMessage.set("Não é seu turno." if self.tabuleiro.local_player.isPlayerTurn() else "É o seu turno.")
+            self.tabuleiro.local_player.setTurn(True)
+            self.turnMessage.set("É o seu turno.")
+            self.tabuleiro.local_player.fillingBoard = True
     
     def reset_game(self):
         print('start_game')
@@ -77,7 +80,17 @@ class PlayerInterface(DogPlayerInterface):
     def receive_start(self, start_status):
         message = start_status.get_message()
         messagebox.showinfo(message=message)
+        self.turnMessage.set("Não é o seu turno.")
 
     def click(self, event, line, column):
         print(self.tabuleiro.local_player.identifier)
+        if (self.tabuleiro.local_player.isPlayerTurn()):
+            if (self.tabuleiro.local_player.fillingBoard):
+                if (self.tabuleiro.local_player.currentPiece < 40):
+                    self.tabuleiro.local_player.placePiece(Location(line, column))
+                    print(self.tabuleiro.local_player.currentPiece)
+                else:
+                    self.tabuleiro.local_player.fillingBoard = False
+                    self.tabuleiro.toggleTurn()
+                    print("TROCOU O TURNO")
         print('CLICK', line, column)

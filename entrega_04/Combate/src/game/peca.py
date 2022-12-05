@@ -1,12 +1,10 @@
-from game.position import *
-from game.player import Player
-
+from game.location import Location
 
 class Peca:
-    def __init__(self):
-        self.poder: int
-        self.position: Position
-        self.jogador_dono: Player
+    def __init__(self, power: int, location: Location, owner):
+        self._poder = power
+        self.location = location
+        self.jogador_dono = owner
 
     def get_power(self):
-        pass
+        return self._poder
