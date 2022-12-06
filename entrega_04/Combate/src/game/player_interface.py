@@ -6,6 +6,7 @@ from dog.dog_actor import DogActor
 from game.tabuleiro import Tabuleiro
 from game.player import Player
 from game.location import Location
+from game.position import Position
 
 
 class PlayerInterface(DogPlayerInterface):
@@ -13,10 +14,13 @@ class PlayerInterface(DogPlayerInterface):
         self.main_window = Tk()  # instanciar Tk (que implementa a janela)
         self.turnMessage = StringVar(None)
         self.turnMessage.set("Partida não iniciada.")
-        self.fill_main_window()  # preenchimento da janela
         self.tabuleiro = tabuleiro
+        self.tablePieces = [[StringVar(None) for x in range(10)] for y in range(10)]
+        self.fill_main_window()  # preenchimento da janela
         self.player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
-        self.tabuleiro.setLocalPlayer(Player(identifier=self.player_name))
+        
+        self.tabuleiro.setCurrentPlayer(Player(identifier=self.player_name))
+
         self.dog_server_interface = DogActor()
         message = self.dog_server_interface.initialize(self.player_name, self)
         messagebox.showinfo(message=message)
@@ -44,7 +48,9 @@ class PlayerInterface(DogPlayerInterface):
             a_column = []  # column
             for x in range(10):
                 aLabel = Label(self.table_frame, bd = 0, image=self.an_image)
+                self.tabuleiro.positions[x][y] = Position(coord_x=x, coord_y=y)
                 aLabel.grid(row=x, column=y)
+                Label(self.table_frame, textvariable=self.tablePieces[x][y], bg="white").grid(row=x, column=y)
                 aLabel.bind("<Button-1>", lambda event, a_line=x, a_column=y: self.click(event, a_line, a_column))
                 a_column.append(aLabel)
             self.board_view.append(a_column)
@@ -70,27 +76,46 @@ class PlayerInterface(DogPlayerInterface):
         message = start_status.get_message()
         messagebox.showinfo(message=message)
         if (len(start_status.players) > 1):
-            self.tabuleiro.local_player.setTurn(True)
+            self.tabuleiro.currentPlayer.setTurn(True)
             self.turnMessage.set("É o seu turno.")
-            self.tabuleiro.local_player.fillingBoard = True
     
     def reset_game(self):
         print('start_game')
+
+    def toggleTurn(self):
+        self.tabuleiro.toggleTurn()
+        self.turnMessage.set("É o seu turno." if self.tabuleiro.currentPlayer.isPlayerTurn() else "Não é o seu turno.")
     
     def receive_start(self, start_status):
         message = start_status.get_message()
         messagebox.showinfo(message=message)
         self.turnMessage.set("Não é o seu turno.")
 
+    def receive_move(self, a_move):
+        match a_move["match_status"]:
+            case "toggle_turn":
+                self.toggleTurn()
+            case "new_piece":
+                self.tabuleiro.insertPiece(line=a_move["line"], column=a_move["column"])
+                self.tablePieces[a_move["line"]][a_move["column"]].set(a_move["power"])
+            case _:
+                pass
+        print("recebeu movimento" + str(a_move))
+
     def click(self, event, line, column):
-        print(self.tabuleiro.local_player.identifier)
-        if (self.tabuleiro.local_player.isPlayerTurn()):
-            if (self.tabuleiro.local_player.fillingBoard):
-                if (self.tabuleiro.local_player.currentPiece < 40):
-                    self.tabuleiro.local_player.placePiece(Location(line, column))
-                    print(self.tabuleiro.local_player.currentPiece)
+        if (self.tabuleiro.currentPlayer.isPlayerTurn()):
+            if (not self.tabuleiro.currentPlayer.filledBoard):
+                if (self.tabuleiro.currentPiece < 40):
+                    newPiecePower = self.tabuleiro.insertPiece(line=line, column=column)
+                    self.tablePieces[line][column].set(newPiecePower)
+                    self.dog_server_interface.send_move({"match_status": "new_piece", "line": 10 - line - 1, "column": column, "power": newPiecePower})
                 else:
-                    self.tabuleiro.local_player.fillingBoard = False
-                    self.tabuleiro.toggleTurn()
+                    self.tabuleiro.currentPlayer.filledBoard = True
+                    self.toggleTurn()
+                    self.dog_server_interface.send_move({"match_status": "toggle_turn"})
                     print("TROCOU O TURNO")
+            else:
+                print("tabuleiro do jogador " + self.tabuleiro.currentPlayer.identifier + " já preenchido")
+        else:
+            print("não é o turno do jogador " + self.tabuleiro.currentPlayer.identifier)
         print('CLICK', line, column)
